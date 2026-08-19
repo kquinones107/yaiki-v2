@@ -8,13 +8,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAGq2rCRXPsB9ageGfmyyv4Q8SqLDAM1rQ",
-  authDomain: "yaikiapp.firebaseapp.com",
-  projectId: "yaikiapp",
-  storageBucket: "yaikiapp.firebasestorage.app",
-  messagingSenderId: "170363891491",
-  appId: "1:170363891491:web:fa862458cf98798267a696",
-  measurementId: "G-J0E0KK805F"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Inicializar Firebase (evitar múltiples inicializaciones)
