@@ -3,7 +3,8 @@
 // Configuración conectada al proyecto Firebase de Yaiki
 // =============================================
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -20,7 +21,16 @@ const firebaseConfig = {
 // Inicializar Firebase (evitar múltiples inicializaciones)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
+// initializeAuth solo puede llamarse una vez por app (fast refresh lo re-ejecuta)
+function createAuth() {
+  try {
+    return initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
+  } catch {
+    return getAuth(app);
+  }
+}
+
+export const auth = createAuth();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 

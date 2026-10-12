@@ -20,9 +20,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // --- HERO CAROUSEL ---
 const HERO_IMAGES = [
-  { uri: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800', title: 'Nueva Colección' },
-  { uri: 'https://images.unsplash.com/photo-1573408301185-9519f94f56a5?w=800', title: 'Pulseras Artesanales' },
-  { uri: 'https://images.unsplash.com/photo-1535556116002-6281ff3e9f36?w=800', title: 'Diseños Únicos' },
+  { source: require('@/assets/images/hero-anillos.jpg'), title: 'Nueva Colección' },
+  { source: require('@/assets/images/hero-pulseras.jpg'), title: 'Pulseras Artesanales' },
+  { source: require('@/assets/images/hero-personalizadas.jpg'), title: 'Diseños Únicos' },
 ];
 
 function HeroCarousel() {
@@ -53,7 +53,7 @@ function HeroCarousel() {
         }}
         renderItem={({ item }) => (
           <View style={styles.heroSlide}>
-            <Image source={{ uri: item.uri }} style={styles.heroImage} resizeMode="cover" />
+            <Image source={item.source} style={styles.heroImage} resizeMode="cover" />
             <View style={styles.heroOverlay}>
               <Text style={styles.heroSubtitle}>YAIKI ACCESORIOS</Text>
               <Text style={styles.heroTitle}>{item.title}</Text>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   heroSlide: { width: SCREEN_WIDTH, height: 280 },
   heroImage: { width: '100%', height: '100%' },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
     padding: Spacing.lg,

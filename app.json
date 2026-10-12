@@ -2,18 +2,22 @@
   "expo": {
     "name": "Yaiki Accesorios",
     "slug": "yaiki-accesorios",
-    "version": "1.0.0",
+    "owner": "zanacode",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "yaiki",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yaiki.accesorios"
+      "bundleIdentifier": "com.zanacode.yaiki",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1a0a2e",
+        "backgroundColor": "#D88CAC",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "package": "com.yaiki.accesorios"
@@ -28,7 +32,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Yaiki necesita acceso a tus fotos para subir imágenes de productos."
+          "photosPermission": "Yaiki necesita acceso a tus fotos para subir imágenes de productos.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       [
@@ -36,10 +42,26 @@
         {
           "faceIDPermission": "Permite el uso de Face ID para proteger tu sesión de administrador."
         }
+      ],
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#D88CAC"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ce679f7c-4f15-46d7-bb4f-553ccc6080cb"
+      }
     }
   }
 }

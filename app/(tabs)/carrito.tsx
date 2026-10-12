@@ -5,8 +5,9 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, Linking, Alert, SafeAreaView,
+  Image, Linking, Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadow } from '@/constants/theme';
@@ -80,7 +81,7 @@ export default function CarritoScreen() {
 
   if (items.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Mi Carrito</Text>
         </View>
@@ -102,7 +103,7 @@ export default function CarritoScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mi Carrito ({totalItems()})</Text>
         <TouchableOpacity onPress={() => Alert.alert('Limpiar carrito', '¿Eliminar todos los productos?', [

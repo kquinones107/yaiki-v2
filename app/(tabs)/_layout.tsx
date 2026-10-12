@@ -2,20 +2,20 @@
 // TABS LAYOUT — Navegación inferior del cliente
 // =============================================
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, type ColorValue } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useCartStore } from '@/store/cartStore';
 
 function TabBarIcon({ name, color, size }: {
   name: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
+  color: ColorValue;
   size: number;
 }) {
   return <Ionicons name={name} size={size} color={color} />;
 }
 
-function CartTabIcon({ color, size }: { color: string; size: number }) {
+function CartTabIcon({ color, size }: { color: ColorValue; size: number }) {
   const totalItems = useCartStore((state) => state.totalItems());
   return (
     <View style={styles.cartIconContainer}>
