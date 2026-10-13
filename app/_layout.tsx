@@ -2,12 +2,22 @@
 // ROOT LAYOUT — Expo Router entry point
 // =============================================
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toastConfig } from '@/components/ui/ToastConfig';
+import AnimatedIntro from '@/components/AnimatedIntro';
+import { getFeaturedProducts, getCategories } from '@/services/productService';
+
+// Mantener el splash nativo hasta que AnimatedIntro tome el relevo
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Tope de espera para la precarga: sin red no se queda pegado en el intro
+const PRELOAD_TIMEOUT_MS = 4000;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +29,20 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const insets = useSafeAreaInsets();
+  const [appReady, setAppReady] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+
+  // Precargar lo que muestra el Home para que aparezca completo tras el intro
+  useEffect(() => {
+    const preload = Promise.allSettled([
+      queryClient.prefetchQuery({ queryKey: ['categories'], queryFn: getCategories }),
+      queryClient.prefetchQuery({ queryKey: ['featured'], queryFn: getFeaturedProducts }),
+    ]);
+    const timeout = new Promise((resolve) => setTimeout(resolve, PRELOAD_TIMEOUT_MS));
+    Promise.race([preload, timeout]).finally(() => setAppReady(true));
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
@@ -48,7 +72,8 @@ export default function RootLayout() {
             }}
           />
         </Stack>
-        <Toast config={toastConfig} />
+        <Toast config={toastConfig} topOffset={insets.top + 8} />
+        {showIntro && <AnimatedIntro ready={appReady} onFinish={() => setShowIntro(false)} />}
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

@@ -1,0 +1,33 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "categories": [
+      "SHOPPING",
+      "LIFESTYLE"
+    ],
+    "info": {
+      "es-MX": {
+        "title": "Yaiki Accesorios",
+        "subtitle": "Joyería artesanal hecha a mano",
+        "promoText": "Pulseras, anillos, collares y aretes hechos a mano. Explora nuestras colecciones y haz tu pedido en segundos por WhatsApp.",
+        "description": "Yaiki Accesorios es la tienda de accesorios artesanales hechos a mano con materiales de calidad y mucho amor. Cada pieza es única y está pensada para expresar tu personalidad.\n\nDESCUBRE NUESTRAS COLECCIONES\n• Pulseras tejidas y de mostacilla\n• Anillos coloridos para todos los días\n• Collares y cadenas delicadas\n• Aretes para cualquier ocasión\n• Accesorios para la playa\n• Diseños personalizados con tu nombre o tu frase favorita\n\nCOMPRAR ES MUY FÁCIL\n1. Explora el catálogo por colección y mira cada pieza en detalle.\n2. Agrega tus favoritos al carrito.\n3. Envía tu pedido por WhatsApp con un solo toque y coordina el pago y la entrega directamente con Yaiki.\n\nSIEMPRE CERCA\nEscríbenos por WhatsApp o síguenos en Instagram y Facebook para conocer las novedades, nuevas colecciones y diseños especiales.\n\nYaiki: accesorios que cuentan tu historia.",
+        "keywords": [
+          "pulseras",
+          "anillos",
+          "collares",
+          "aretes",
+          "joyas",
+          "bisuteria",
+          "personalizadas",
+          "mostacilla",
+          "regalo",
+          "playa",
+          "moda",
+          "tejidas"
+        ],
+        "releaseNotes": "¡Yaiki se renueva! Nueva app más rápida y moderna:\n• Nuevo diseño y pantalla de inicio\n• Catálogo por colecciones\n• Carrito y pedidos directos por WhatsApp\n• Mejoras de rendimiento y estabilidad",
+        "privacyPolicyUrl": "https://zanacode.com/en/privacy-policy/yaiki"
+      }
+    }
+  }
+}
