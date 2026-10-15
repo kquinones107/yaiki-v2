@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toastConfig } from '@/components/ui/ToastConfig';
 import AnimatedIntro from '@/components/AnimatedIntro';
 import { getFeaturedProducts, getCategories } from '@/services/productService';
+import { useCustomerStore } from '@/store/customerStore';
 
 // Mantener el splash nativo hasta que AnimatedIntro tome el relevo
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -32,6 +33,10 @@ export default function RootLayout() {
   const insets = useSafeAreaInsets();
   const [appReady, setAppReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const initCustomer = useCustomerStore((s) => s.init);
+
+  // Restaurar la sesión de la clienta al abrir la app
+  useEffect(() => initCustomer(), []);
 
   // Precargar lo que muestra el Home para que aparezca completo tras el intro
   useEffect(() => {
@@ -56,6 +61,12 @@ export default function RootLayout() {
               animation: 'slide_from_right',
             }}
           />
+          <Stack.Screen name="checkout" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="orders" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="favoritos" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="mis-disenos" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="nosotros" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen
             name="admin-login"
             options={{

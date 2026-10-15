@@ -62,6 +62,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="crear"
+        options={{
+          title: 'Crear',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="color-palette-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="carrito"
         options={{
           title: 'Carrito',
@@ -71,11 +80,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="nosotros"
+        name="cuenta"
         options={{
-          title: 'Nosotros',
+          title: 'Cuenta',
           tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="heart-outline" color={color} size={size} />
+            <TabBarIcon name="person-outline" color={color} size={size} />
           ),
         }}
       />

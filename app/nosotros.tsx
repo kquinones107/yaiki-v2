@@ -3,6 +3,8 @@
 // =============================================
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 
@@ -14,7 +16,15 @@ const INFO_ITEMS = [
 
 export default function NosotrosScreen() {
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.topBarTitle}>Sobre Yaiki</Text>
+        <View style={{ width: 32 }} />
+      </View>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* HERO */}
       <View style={styles.hero}>
         <Text style={styles.heroLogo}>✦ YAIKI</Text>
@@ -62,15 +72,28 @@ export default function NosotrosScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1, backgroundColor: Colors.background },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  topBarTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  backBtn: { padding: 4 },
   hero: {
-    paddingTop: 64,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xxl,
     alignItems: 'center',
     backgroundColor: Colors.backgroundCard,

@@ -3,13 +3,13 @@
     "name": "Yaiki Accesorios",
     "slug": "yaiki-accesorios",
     "owner": "zanacode",
-    "version": "1.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "yaiki",
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.zanacode.yaiki",
       "config": {
         "usesNonExemptEncryption": false
@@ -32,7 +32,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Yaiki necesita acceso a tus fotos para subir imágenes de productos.",
+          "photosPermission": "Yaiki necesita acceso a tus fotos para subir im\u00e1genes de productos.",
           "cameraPermission": false,
           "microphonePermission": false
         }
@@ -40,7 +40,7 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "Permite el uso de Face ID para proteger tu sesión de administrador."
+          "faceIDPermission": "Permite el uso de Face ID para proteger tu sesi\u00f3n de administrador."
         }
       ],
       "expo-image",

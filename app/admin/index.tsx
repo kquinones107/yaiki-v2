@@ -1,16 +1,20 @@
 // =============================================
 // ADMIN DASHBOARD — Panel de control del Administrador
 // =============================================
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadow } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
-import { getAllProductsAdmin, getAllCategories } from '@/services/productService';
+import {
+  getAllProductsAdmin, getAllCategories, seedFirestoreCatalog,
+} from '@/services/productService';
+import { getAllOrders } from '@/services/orderService';
+import Toast from 'react-native-toast-message';
 
 export default function AdminDashboardScreen() {
   const { admin, logout } = useAuthStore();
@@ -24,6 +28,44 @@ export default function AdminDashboardScreen() {
     queryKey: ['admin_categories'],
     queryFn: getAllCategories,
   });
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ['admin_orders'],
+    queryFn: getAllOrders,
+  });
+
+  const queryClient = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
+
+  // Copia el catálogo base a Firestore para poder editarlo aquí
+  const handleSeedCatalog = () => {
+    Alert.alert(
+      'Cargar catálogo base',
+      'Se agregan las categorías y productos de ejemplo a Firestore para que los edites (precios, fotos, stock). No se duplican si ya existen.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cargar',
+          onPress: async () => {
+            setSeeding(true);
+            try {
+              const result = await seedFirestoreCatalog();
+              queryClient.invalidateQueries();
+              Toast.show({
+                type: 'success',
+                text1: 'Catálogo base cargado',
+                text2: `${result.products} productos · ${result.categories} categorías`,
+              });
+            } catch {
+              Alert.alert('Error', 'No pudimos cargar el catálogo base.');
+            } finally {
+              setSeeding(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Deseas salir del panel de administración?', [
@@ -39,6 +81,9 @@ export default function AdminDashboardScreen() {
     ]);
   };
 
+  const pendingOrders = orders.filter(
+    (o) => o.status === 'recibido' || o.status === 'preparacion'
+  ).length;
   const availableProducts = products.filter((p) => p.isAvailable).length;
   const outOfStockProducts = products.filter((p) => p.stock === 0).length;
 
@@ -77,11 +122,39 @@ export default function AdminDashboardScreen() {
           <Text style={styles.statNumber}>{categories.length}</Text>
           <Text style={styles.statLabel}>Categorías</Text>
         </View>
+        <View style={styles.statCard}>
+          <Ionicons name="receipt-outline" size={24} color={Colors.info} />
+          <Text style={styles.statNumber}>{orders.length}</Text>
+          <Text style={styles.statLabel}>Pedidos Totales</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="time-outline" size={24} color={Colors.warning} />
+          <Text style={styles.statNumber}>{pendingOrders}</Text>
+          <Text style={styles.statLabel}>Por Despachar</Text>
+        </View>
       </View>
 
       {/* QUICK ACTIONS */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => router.push('/admin/pedidos')}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: 'rgba(33, 150, 243, 0.15)' }]}>
+            <Ionicons name="receipt-outline" size={24} color={Colors.info} />
+          </View>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>Pedidos</Text>
+            <Text style={styles.actionDesc}>
+              {pendingOrders > 0
+                ? `${pendingOrders} pedido(s) por despachar`
+                : 'Ver pedidos y cambiar su estado'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.actionBtn}
@@ -121,6 +194,25 @@ export default function AdminDashboardScreen() {
           <View style={styles.actionInfo}>
             <Text style={styles.actionTitle}>Gestionar Categorías</Text>
             <Text style={styles.actionDesc}>Crear o modificar secciones del catálogo</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={handleSeedCatalog}
+          disabled={seeding}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
+            <Ionicons name="cloud-upload-outline" size={24} color={Colors.primary} />
+          </View>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>
+              {seeding ? 'Cargando…' : 'Cargar Catálogo Base'}
+            </Text>
+            <Text style={styles.actionDesc}>
+              Trae los productos de ejemplo a Firestore para editarlos aquí
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
         </TouchableOpacity>

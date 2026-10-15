@@ -1,17 +1,19 @@
 // =============================================
 // ZUSTAND STORE — Carrito de compras
+// Soporta productos del catálogo y pulseras personalizadas
 // Persistencia con AsyncStorage
 // =============================================
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CartItem, Product } from '@/types';
+import { BraceletDesign, CartItem, Product } from '@/types';
 
 interface CartState {
   items: CartItem[];
   addItem: (product: Product) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addCustomDesign: (design: BraceletDesign) => void;
+  removeItem: (lineId: string) => void;
+  updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: () => number;
   totalPrice: () => number;
@@ -24,54 +26,64 @@ export const useCartStore = create<CartState>()(
 
       addItem: (product: Product) => {
         set((state) => {
-          const existingIndex = state.items.findIndex(
-            (item) => item.product.id === product.id
-          );
-          if (existingIndex >= 0) {
+          // Un producto del catálogo se agrupa por su propio id
+          const existing = state.items.findIndex((i) => i.product?.id === product.id);
+          if (existing >= 0) {
             const updated = [...state.items];
-            updated[existingIndex] = {
-              ...updated[existingIndex],
-              quantity: updated[existingIndex].quantity + 1,
+            updated[existing] = {
+              ...updated[existing],
+              quantity: updated[existing].quantity + 1,
             };
             return { items: updated };
           }
-          return { items: [...state.items, { product, quantity: 1 }] };
+          const line: CartItem = {
+            id: `p_${product.id}`,
+            name: product.name,
+            unitPrice: product.price,
+            quantity: 1,
+            image: product.images[0],
+            product,
+          };
+          return { items: [...state.items, line] };
         });
       },
 
-      removeItem: (productId: string) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.product.id !== productId),
-        }));
+      // Cada diseño es único: siempre entra como una línea nueva
+      addCustomDesign: (design: BraceletDesign) => {
+        set((state) => {
+          const line: CartItem = {
+            id: `d_${design.id}`,
+            name: design.name,
+            unitPrice: design.totalPrice,
+            quantity: 1,
+            design,
+          };
+          return { items: [...state.items, line] };
+        });
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      removeItem: (lineId: string) => {
+        set((state) => ({ items: state.items.filter((i) => i.id !== lineId) }));
+      },
+
+      updateQuantity: (lineId: string, quantity: number) => {
         if (quantity <= 0) {
-          get().removeItem(productId);
+          get().removeItem(lineId);
           return;
         }
         set((state) => ({
-          items: state.items.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
-          ),
+          items: state.items.map((i) => (i.id === lineId ? { ...i, quantity } : i)),
         }));
       },
 
       clearCart: () => set({ items: [] }),
 
-      totalItems: () => {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      },
+      totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 
-      totalPrice: () => {
-        return get().items.reduce(
-          (sum, item) => sum + item.product.price * item.quantity,
-          0
-        );
-      },
+      totalPrice: () => get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
     }),
     {
-      name: 'yaiki-cart',
+      name: 'yaiki-cart-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

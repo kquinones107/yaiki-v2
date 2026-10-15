@@ -9,6 +9,7 @@ import {
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import ProductImage from '@/components/ProductImage';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { getAllProductsAdmin, deleteProduct, updateProduct } from '@/services/productService';
 import { Product } from '@/types';
@@ -53,8 +54,8 @@ function AdminProductRow({ product }: { product: Product }) {
 
   return (
     <View style={[styles.row, !product.isAvailable && styles.rowDisabled]}>
-      <Image
-        source={{ uri: product.images[0] || 'https://via.placeholder.com/80' }}
+      <ProductImage
+        product={product}
         style={styles.image}
       />
       <View style={styles.info}>

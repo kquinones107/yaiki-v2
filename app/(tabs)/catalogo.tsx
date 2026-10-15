@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { getProducts, getCategories } from '@/services/productService';
 import { useCartStore } from '@/store/cartStore';
+import ProductImage from '@/components/ProductImage';
 import { Product } from '@/types';
 import Toast from 'react-native-toast-message';
 
@@ -23,8 +24,8 @@ function ProductGridCard({ product }: { product: Product }) {
       onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
       activeOpacity={0.85}
     >
-      <Image
-        source={{ uri: product.images[0] || 'https://via.placeholder.com/200' }}
+      <ProductImage
+        product={product}
         style={styles.gridImage}
         resizeMode="cover"
       />

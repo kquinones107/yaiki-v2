@@ -7,11 +7,14 @@ import {
   Dimensions, FlatList, Linking, Alert,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadow } from '@/constants/theme';
 import { getProductById } from '@/services/productService';
 import { useCartStore } from '@/store/cartStore';
+import { useCustomerStore } from '@/store/customerStore';
+import { addFavorite, getFavorites, removeFavorite } from '@/services/favoriteService';
+import { imageSourceFor } from '@/components/ProductImage';
 import Toast from 'react-native-toast-message';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -21,6 +24,14 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [imageIndex, setImageIndex] = useState(0);
   const addItem = useCartStore((s) => s.addItem);
+  const { customer } = useCustomerStore();
+  const queryClient = useQueryClient();
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites', customer?.uid],
+    queryFn: () => getFavorites(customer!.uid),
+    enabled: !!customer,
+  });
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
@@ -52,14 +63,34 @@ export default function ProductDetailScreen() {
     Toast.show({ type: 'success', text1: '¡Agregado al carrito!', text2: product.name, visibilityTime: 2000 });
   };
 
-  const handleBuyNow = async () => {
-    const msg = `¡Hola! Me interesa este producto:\n\n*${product.name}*\nPrecio: $${product.price.toLocaleString('es-CO')} COP\n\n¿Está disponible?`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-    try {
-      await Linking.openURL(url);
-    } catch {
-      Alert.alert('Error', 'No se pudo abrir WhatsApp.');
+  // Agrega y lleva directo al checkout dentro de la app
+  const handleBuyNow = () => {
+    addItem(product);
+    router.push('/checkout');
+  };
+
+  const isFavorite = favorites.some((f) => f.id === product.id);
+
+  const handleToggleFavorite = async () => {
+    if (!customer) {
+      Alert.alert(
+        'Entra a tu cuenta',
+        'Crea tu cuenta para guardar tus piezas favoritas.',
+        [
+          { text: 'Después', style: 'cancel' },
+          { text: 'Entrar', onPress: () => router.push('/(tabs)/cuenta') },
+        ]
+      );
+      return;
     }
+    if (isFavorite) {
+      await removeFavorite(customer.uid, product.id);
+      Toast.show({ type: 'success', text1: 'Quitado de favoritos' });
+    } else {
+      await addFavorite(customer.uid, product);
+      Toast.show({ type: 'success', text1: 'Guardado en favoritos', text2: product.name });
+    }
+    queryClient.invalidateQueries({ queryKey: ['favorites', customer.uid] });
   };
 
   return (
@@ -69,10 +100,19 @@ export default function ProductDetailScreen() {
         <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
       </TouchableOpacity>
 
+      {/* FAVORITO */}
+      <TouchableOpacity style={styles.favBtn} onPress={handleToggleFavorite}>
+        <Ionicons
+          name={isFavorite ? 'heart' : 'heart-outline'}
+          size={22}
+          color={isFavorite ? Colors.error : Colors.textPrimary}
+        />
+      </TouchableOpacity>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* IMAGE CAROUSEL */}
         <FlatList
-          data={product.images.length > 0 ? product.images : ['https://via.placeholder.com/400']}
+          data={product.images.length > 0 ? product.images : ['']}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -81,7 +121,11 @@ export default function ProductDetailScreen() {
             setImageIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
           }}
           renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={styles.productImage} resizeMode="cover" />
+            <Image
+              source={imageSourceFor(product.categoryId, item)}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
           )}
         />
         {product.images.length > 1 && (
@@ -112,6 +156,21 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
+          {/* SOPORTE (no es el checkout: el pedido se hace en la app) */}
+          <TouchableOpacity
+            style={styles.askBtn}
+            onPress={() =>
+              Linking.openURL(
+                `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                  `Hola! Tengo una pregunta sobre "${product.name}".`
+                )}`
+              )
+            }
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={16} color={Colors.textSecondary} />
+            <Text style={styles.askBtnText}>¿Dudas con esta pieza? Pregúntanos</Text>
+          </TouchableOpacity>
+
           {/* STOCK */}
           <View style={styles.stockRow}>
             <Ionicons
@@ -133,8 +192,8 @@ export default function ProductDetailScreen() {
           <Text style={styles.cartBtnText}>Agregar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.buyBtn} onPress={handleBuyNow} disabled={product.stock === 0}>
-          <Ionicons name="logo-whatsapp" size={22} color={Colors.black} />
-          <Text style={styles.buyBtnText}>Comprar ya</Text>
+          <Ionicons name="bag-check-outline" size={22} color={Colors.black} />
+          <Text style={styles.buyBtnText}>Comprar ahora</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -147,6 +206,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 52,
     left: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: BorderRadius.full,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  askBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginTop: Spacing.md,
+  },
+  askBtnText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  favBtn: {
+    position: 'absolute',
+    top: 52,
+    right: 16,
     zIndex: 10,
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: BorderRadius.full,

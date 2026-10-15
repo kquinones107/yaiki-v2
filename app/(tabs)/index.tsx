@@ -10,6 +10,7 @@ import {
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import ProductImage from '@/components/ProductImage';
 import { Colors, Spacing, BorderRadius, ADMIN_TAP_COUNT } from '@/constants/theme';
 import { getFeaturedProducts, getCategories } from '@/services/productService';
 import { Category, Product } from '@/types';
@@ -106,11 +107,7 @@ function ProductCard({ product }: { product: Product }) {
       onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
       activeOpacity={0.9}
     >
-      <Image
-        source={{ uri: product.images[0] || 'https://via.placeholder.com/200' }}
-        style={styles.productImage}
-        resizeMode="cover"
-      />
+      <ProductImage product={product} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
         <Text style={styles.productPrice}>${product.price.toLocaleString('es-CO')}</Text>
