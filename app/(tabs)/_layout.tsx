@@ -2,7 +2,8 @@
 // TABS LAYOUT — Navegación inferior del cliente
 // =============================================
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity, type ColorValue } from 'react-native';
+import { View, Text, StyleSheet, Platform, type ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useCartStore } from '@/store/cartStore';
@@ -32,11 +33,24 @@ function CartTabIcon({ color, size }: { color: ColorValue; size: number }) {
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
+  // Espacio reservado para la barra de gestos (iOS) o la navegación del
+  // sistema (Android). Mínimo de respiro cuando el dispositivo no reporta inset.
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 10 : 12);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: TAB_BAR_HEIGHT + bottomInset,
+            paddingBottom: bottomInset,
+          },
+        ],
+        tabBarItemStyle: styles.tabItem,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarShowLabel: true,
@@ -92,18 +106,23 @@ export default function TabsLayout() {
   );
 }
 
+// Altura del contenido de la barra, sin contar el safe area inferior.
+const TAB_BAR_HEIGHT = 58;
+
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#111111',
     borderTopColor: Colors.border,
     borderTopWidth: 1,
-    height: 60,
-    paddingBottom: 8,
-    paddingTop: 4,
+    paddingTop: 8,
+  },
+  tabItem: {
+    paddingTop: 2,
   },
   tabLabel: {
     fontSize: 11,
     fontWeight: '500',
+    marginTop: 2,
   },
   cartIconContainer: {
     position: 'relative',

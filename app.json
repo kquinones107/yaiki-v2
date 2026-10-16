@@ -32,7 +32,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Yaiki necesita acceso a tus fotos para subir im\u00e1genes de productos.",
+          "photosPermission": "Yaiki necesita acceso a tus fotos para subir imágenes de productos.",
           "cameraPermission": false,
           "microphonePermission": false
         }
@@ -40,7 +40,7 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "Permite el uso de Face ID para proteger tu sesi\u00f3n de administrador."
+          "faceIDPermission": "Permite el uso de Face ID para proteger tu sesión de administrador."
         }
       ],
       "expo-image",
@@ -63,6 +63,12 @@
       "eas": {
         "projectId": "ce679f7c-4f15-46d7-bb4f-553ccc6080cb"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ce679f7c-4f15-46d7-bb4f-553ccc6080cb"
     }
   }
 }

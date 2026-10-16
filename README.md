@@ -73,8 +73,8 @@ el pedido ya **no sale de la app** y hay funciones que no existen en el sitio we
 | Checkout completo dentro de la app | `app/checkout.tsx` |
 | Seguimiento del pedido (Recibido → Preparación → Enviado → Entregado) | `app/order/[id].tsx` |
 | Historial de pedidos y repetir pedido | `app/orders.tsx` |
-| Favoritos sincronizados con la cuenta | `app/favoritos.tsx` |
-| Talla de muñeca guardada en el perfil | `app/(tabs)/cuenta.tsx` |
+| Favoritos guardados en el teléfono | `app/favoritos.tsx` |
+| Datos de envío y talla de muñeca, sin cuenta | `app/(tabs)/cuenta.tsx` |
 | Gestión de pedidos y cambio de estado | `app/admin/pedidos.tsx` |
 
 WhatsApp quedó **solo como soporte**, nunca como checkout.
@@ -104,6 +104,24 @@ precios en COP, descripciones y tags.
 
 Los precios y las piezas del diseñador están en `constants/beads.ts`
 (`BRACELET_BASE_PRICE`, `BEADS`, `WRIST_SIZES`) y se pueden cambiar sin tocar las pantallas.
+
+---
+
+## 🔑 Pedidos sin cuenta (dos pasos en la consola de Firebase)
+
+La clienta **no se registra**: no hay correo ni contraseña. Solo escribe sus datos de
+envío, que quedan guardados en su teléfono (`store/profileStore.ts`). Para que el pedido
+se pueda guardar con las reglas puestas, la app abre en silencio una **sesión anónima**
+de Firebase y usa ese `uid` como `customerId` del pedido.
+
+Hay que habilitarlo una sola vez en la consola, o el checkout falla con
+`auth/admin-restricted-operation` y el pedido no se crea:
+
+1. **Authentication → Sign-in method → Anónimo → Habilitar.**
+2. **Firestore → Reglas →** pegar las reglas de abajo y publicar (las anteriores no
+   tenían `orders`, así que cualquier pedido se rechaza con `permission-denied`).
+
+Favoritos y diseños guardados ya no usan Firestore: viven en el teléfono.
 
 ---
 

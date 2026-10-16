@@ -27,7 +27,7 @@ function CartItemRow({ item }: { item: CartItem }) {
       <View style={styles.itemRow}>
         {item.design ? (
           <View style={styles.designThumb}>
-            <Ionicons name="color-palette-outline" size={26} color={Colors.primary} />
+            <Ionicons name="color-palette-outline" size={28} color={Colors.primary} />
           </View>
         ) : (
           <Image
@@ -36,35 +36,26 @@ function CartItemRow({ item }: { item: CartItem }) {
             resizeMode="cover"
           />
         )}
+
         <View style={styles.itemInfo}>
-          <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+          <View style={styles.itemHeaderRow}>
+            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+            <TouchableOpacity
+              onPress={() => removeItem(item.id)}
+              style={styles.deleteBtn}
+              hitSlop={8}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.error} />
+            </TouchableOpacity>
+          </View>
+
           {!!item.design && (
             <Text style={styles.itemDesign} numberOfLines={2}>
               {designSummary(item.design)}
             </Text>
           )}
-          <Text style={styles.itemPrice}>{money(item.unitPrice)}</Text>
-          <View style={styles.qtyRow}>
-            <TouchableOpacity
-              style={styles.qtyBtn}
-              onPress={() => updateQuantity(item.id, item.quantity - 1)}
-            >
-              <Ionicons name="remove" size={14} color={Colors.primary} />
-            </TouchableOpacity>
-            <Text style={styles.qtyText}>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.qtyBtn}
-              onPress={() => updateQuantity(item.id, item.quantity + 1)}
-            >
-              <Ionicons name="add" size={14} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.itemRight}>
-          <Text style={styles.itemTotal}>{money(item.unitPrice * item.quantity)}</Text>
-          <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.deleteBtn}>
-            <Ionicons name="trash-outline" size={20} color={Colors.error} />
-          </TouchableOpacity>
+
+          <Text style={styles.itemPrice}>{money(item.unitPrice)} c/u</Text>
         </View>
       </View>
 
@@ -74,6 +65,27 @@ function CartItemRow({ item }: { item: CartItem }) {
           <BraceletPreview beads={item.design.beads} scale={0.7} />
         </View>
       )}
+
+      <View style={styles.itemFooter}>
+        <View style={styles.qtyRow}>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => updateQuantity(item.id, item.quantity - 1)}
+            hitSlop={6}
+          >
+            <Ionicons name="remove" size={16} color={Colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.qtyText}>{item.quantity}</Text>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => updateQuantity(item.id, item.quantity + 1)}
+            hitSlop={6}
+          >
+            <Ionicons name="add" size={16} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.itemTotal}>{money(item.unitPrice * item.quantity)}</Text>
+      </View>
     </View>
   );
 }
@@ -83,6 +95,7 @@ export default function CarritoScreen() {
 
   const subtotal = totalPrice();
   const shipping = shippingCostFor(subtotal);
+  const count = totalItems();
 
   if (items.length === 0) {
     return (
@@ -117,12 +130,21 @@ export default function CarritoScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mi Carrito ({totalItems()})</Text>
-        <TouchableOpacity onPress={() => Alert.alert('Limpiar carrito', '¿Eliminar todos los productos?', [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Limpiar', style: 'destructive', onPress: clearCart },
-        ])}>
-          <Ionicons name="trash-outline" size={22} color={Colors.error} />
+        <View style={styles.headerTexts}>
+          <Text style={styles.headerTitle}>Mi Carrito</Text>
+          <Text style={styles.headerSubtitle}>
+            {count} {count === 1 ? 'producto' : 'productos'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.clearBtn}
+          hitSlop={8}
+          onPress={() => Alert.alert('Limpiar carrito', '¿Eliminar todos los productos?', [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Limpiar', style: 'destructive', onPress: clearCart },
+          ])}
+        >
+          <Ionicons name="trash-outline" size={20} color={Colors.error} />
         </TouchableOpacity>
       </View>
 
@@ -137,30 +159,36 @@ export default function CarritoScreen() {
 
       {/* RESUMEN Y CHECKOUT */}
       <View style={styles.footer}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal</Text>
-          <Text style={styles.summaryValue}>{money(subtotal)} COP</Text>
+        <View style={styles.summaryBlock}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryValue}>{money(subtotal)} COP</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Envío</Text>
+            <Text style={[styles.summaryValue, shipping === 0 && styles.freeShipping]}>
+              {shipping === 0 ? 'Gratis' : `${money(shipping)} COP`}
+            </Text>
+          </View>
+          {shipping > 0 && (
+            <Text style={styles.freeShippingHint}>
+              Envío gratis en compras desde {money(FREE_SHIPPING_FROM)}
+            </Text>
+          )}
         </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Envío</Text>
-          <Text style={styles.summaryValue}>
-            {shipping === 0 ? 'Gratis' : `${money(shipping)} COP`}
-          </Text>
-        </View>
-        {shipping > 0 && (
-          <Text style={styles.freeShippingHint}>
-            Envío gratis en compras desde {money(FREE_SHIPPING_FROM)}
-          </Text>
-        )}
+
         <View style={styles.divider} />
-        <View style={styles.summaryRow}>
+
+        <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>{money(subtotal + shipping)} COP</Text>
         </View>
+
         <View style={styles.paymentNotice}>
           <Ionicons name="cash-outline" size={16} color={Colors.success} />
           <Text style={styles.paymentNoticeText}>{PAYMENT_NOTICE}</Text>
         </View>
+
         <TouchableOpacity style={styles.checkoutBtn} onPress={() => router.push('/checkout')}>
           <Ionicons name="bag-check-outline" size={22} color={Colors.black} />
           <Text style={styles.checkoutBtnText}>Finalizar pedido</Text>
@@ -172,75 +200,147 @@ export default function CarritoScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+
+  // ---- Header ----
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
   },
-  headerTitle: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  list: { padding: Spacing.md },
+  headerTexts: { gap: 2 },
+  headerTitle: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', letterSpacing: -0.4 },
+  headerSubtitle: { color: Colors.textMuted, fontSize: 13 },
+  clearBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.backgroundCard,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // ---- Lista ----
+  list: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.lg,
+  },
+  separator: { height: Spacing.md },
+
+  // ---- Item ----
   itemCard: {
     backgroundColor: Colors.backgroundCard,
     borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: Spacing.md,
   },
-  itemRow: { flexDirection: 'row' },
-  itemImage: { width: 100, height: 110 },
+  itemRow: { flexDirection: 'row', gap: Spacing.md },
+  itemImage: {
+    width: 88,
+    height: 88,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.backgroundSurface,
+  },
   designThumb: {
-    width: 100,
-    height: 110,
+    width: 88,
+    height: 88,
+    borderRadius: BorderRadius.md,
     backgroundColor: Colors.backgroundSurface,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  itemInfo: { flex: 1, padding: Spacing.sm, justifyContent: 'space-between', gap: 2 },
-  itemName: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  itemDesign: { color: Colors.textMuted, fontSize: 10, lineHeight: 14 },
+  itemInfo: { flex: 1, gap: Spacing.xs },
+  itemHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  itemName: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  itemDesign: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
   itemPrice: { color: Colors.textSecondary, fontSize: 13 },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  qtyBtn: {
+  deleteBtn: { padding: 2 },
+  designPreview: {
+    backgroundColor: Colors.backgroundSurface,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+
+  itemFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.md,
+  },
+  qtyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
     backgroundColor: Colors.backgroundSurface,
     borderRadius: BorderRadius.full,
-    width: 26,
-    height: 26,
+    padding: 4,
+  },
+  qtyBtn: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.full,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  qtyText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', minWidth: 18, textAlign: 'center' },
-  itemRight: { padding: Spacing.sm, justifyContent: 'space-between', alignItems: 'flex-end' },
-  itemTotal: { color: Colors.primary, fontSize: 14, fontWeight: '800' },
-  deleteBtn: { padding: 4 },
-  designPreview: {
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.sm,
+  qtyText: {
+    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    minWidth: 24,
+    textAlign: 'center',
   },
-  separator: { height: Spacing.sm },
+  itemTotal: { color: Colors.primary, fontSize: 17, fontWeight: '800' },
+
+  // ---- Footer / resumen ----
   footer: {
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     backgroundColor: Colors.backgroundCard,
-    gap: 6,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    gap: Spacing.sm,
   },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  summaryBlock: { gap: Spacing.xs },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryLabel: { color: Colors.textSecondary, fontSize: 14 },
   summaryValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  freeShippingHint: { color: Colors.textMuted, fontSize: 11 },
-  divider: { height: 1, backgroundColor: Colors.border, marginVertical: 4 },
+  freeShipping: { color: Colors.success, fontWeight: '700' },
+  freeShippingHint: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
+  divider: { height: 1, backgroundColor: Colors.border },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   totalLabel: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
-  totalValue: { color: Colors.primary, fontSize: 20, fontWeight: '900' },
+  totalValue: { color: Colors.primary, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   paymentNotice: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.sm,
     backgroundColor: 'rgba(76,175,80,0.12)',
     borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
   },
   paymentNoticeText: { flex: 1, color: Colors.textSecondary, fontSize: 11, lineHeight: 16 },
   checkoutBtn: {
@@ -249,11 +349,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
     backgroundColor: Colors.primary,
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderRadius: BorderRadius.full,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   checkoutBtnText: { color: Colors.black, fontSize: 16, fontWeight: '800' },
+
+  // ---- Vacío ----
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   emptyIcon: { fontSize: 64, marginBottom: Spacing.md },
   emptyTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '700', marginBottom: Spacing.sm },

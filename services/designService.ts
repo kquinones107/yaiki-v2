@@ -1,11 +1,8 @@
 // =============================================
 // SERVICIO — Diseños personalizados de pulseras
-// Cálculo de precio y persistencia en Firestore
+// Precio, largo y resumen legible. Los diseños
+// guardados viven en el teléfono (profileStore).
 // =============================================
-import {
-  collection, doc, addDoc, getDocs, deleteDoc, query, orderBy, Timestamp,
-} from 'firebase/firestore';
-import { db } from '@/config/firebase';
 import { BraceletDesign, DesignBead } from '@/types';
 import { BRACELET_BASE_PRICE, MAX_BEADS_PER_CM, findBead } from '@/constants/beads';
 
@@ -25,32 +22,4 @@ export const designSummary = (design: BraceletDesign): string => {
     return bead.kind === 'letra' ? `[${b.letter ?? '?'}]` : bead.label;
   });
   return `${design.wristSize} cm · ${design.beads.length} piezas · ${parts.join(' + ')}`;
-};
-
-// ---- PERSISTENCIA (subcolección del cliente) ----
-
-const designsRef = (uid: string) => collection(db, 'customers', uid, 'designs');
-
-export const saveDesign = async (
-  uid: string,
-  design: Omit<BraceletDesign, 'id' | 'createdAt'>
-): Promise<string> => {
-  const docRef = await addDoc(designsRef(uid), {
-    ...design,
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
-};
-
-export const getMyDesigns = async (uid: string): Promise<BraceletDesign[]> => {
-  const snap = await getDocs(query(designsRef(uid), orderBy('createdAt', 'desc')));
-  return snap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-    createdAt: d.data().createdAt?.toDate?.() ?? d.data().createdAt,
-  } as BraceletDesign));
-};
-
-export const deleteDesign = async (uid: string, designId: string) => {
-  await deleteDoc(doc(db, 'customers', uid, 'designs', designId));
 };

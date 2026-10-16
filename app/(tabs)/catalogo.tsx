@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, TextInput, ScrollView,
+  Image, TextInput, ScrollView, useWindowDimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -53,8 +53,13 @@ function ProductGridCard({ product }: { product: Product }) {
   );
 }
 
+/** Ancho objetivo de cada tarjeta; de ahí salen las columnas */
+const CARD_TARGET_WIDTH = 200;
+
 export default function CatalogoScreen() {
   const params = useLocalSearchParams();
+  const { width } = useWindowDimensions();
+  const columns = Math.max(2, Math.min(4, Math.floor(width / CARD_TARGET_WIDTH)));
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     (params.categoryId as string) || 'all'
   );
@@ -138,8 +143,10 @@ export default function CatalogoScreen() {
       ) : (
         <FlatList
           data={filtered}
+          // En iPad (o ventana ancha) las tarjetas no se estiran: caben más columnas
+          key={`cols-${columns}`}
           keyExtractor={(p) => p.id}
-          numColumns={2}
+          numColumns={columns}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}

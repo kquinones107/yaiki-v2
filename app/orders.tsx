@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { getMyOrders } from '@/services/orderService';
-import { useCustomerStore } from '@/store/customerStore';
+import { useProfileStore } from '@/store/profileStore';
 import { ORDER_STATUS_LABEL, Order, OrderStatus } from '@/types';
 
 const money = (n: number) => `$${n.toLocaleString('es-CO')}`;
@@ -31,12 +31,12 @@ const formatDate = (value: Date | string) => {
 };
 
 export default function OrdersScreen() {
-  const { customer } = useCustomerStore();
+  const { deviceId, uid } = useProfileStore();
+  const customerId = uid ?? deviceId;
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['my_orders', customer?.uid],
-    queryFn: () => getMyOrders(customer!.uid),
-    enabled: !!customer,
+    queryKey: ['my_orders', customerId],
+    queryFn: () => getMyOrders(customerId),
   });
 
   return (

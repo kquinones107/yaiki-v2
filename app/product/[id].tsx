@@ -4,34 +4,26 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
-  Dimensions, FlatList, Linking, Alert,
+  useWindowDimensions, FlatList, Linking,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadow } from '@/constants/theme';
 import { getProductById } from '@/services/productService';
 import { useCartStore } from '@/store/cartStore';
-import { useCustomerStore } from '@/store/customerStore';
-import { addFavorite, getFavorites, removeFavorite } from '@/services/favoriteService';
+import { useProfileStore } from '@/store/profileStore';
 import { imageSourceFor } from '@/components/ProductImage';
 import Toast from 'react-native-toast-message';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const WHATSAPP_NUMBER = '+573187887223';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { width: screenWidth } = useWindowDimensions();
   const [imageIndex, setImageIndex] = useState(0);
   const addItem = useCartStore((s) => s.addItem);
-  const { customer } = useCustomerStore();
-  const queryClient = useQueryClient();
-
-  const { data: favorites = [] } = useQuery({
-    queryKey: ['favorites', customer?.uid],
-    queryFn: () => getFavorites(customer!.uid),
-    enabled: !!customer,
-  });
+  const { favorites, toggleFavorite } = useProfileStore();
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
@@ -71,26 +63,13 @@ export default function ProductDetailScreen() {
 
   const isFavorite = favorites.some((f) => f.id === product.id);
 
-  const handleToggleFavorite = async () => {
-    if (!customer) {
-      Alert.alert(
-        'Entra a tu cuenta',
-        'Crea tu cuenta para guardar tus piezas favoritas.',
-        [
-          { text: 'Después', style: 'cancel' },
-          { text: 'Entrar', onPress: () => router.push('/(tabs)/cuenta') },
-        ]
-      );
-      return;
-    }
-    if (isFavorite) {
-      await removeFavorite(customer.uid, product.id);
-      Toast.show({ type: 'success', text1: 'Quitado de favoritos' });
-    } else {
-      await addFavorite(customer.uid, product);
-      Toast.show({ type: 'success', text1: 'Guardado en favoritos', text2: product.name });
-    }
-    queryClient.invalidateQueries({ queryKey: ['favorites', customer.uid] });
+  const handleToggleFavorite = () => {
+    const saved = toggleFavorite(product);
+    Toast.show({
+      type: 'success',
+      text1: saved ? 'Guardado en favoritos' : 'Quitado de favoritos',
+      ...(saved ? { text2: product.name } : {}),
+    });
   };
 
   return (
@@ -118,12 +97,12 @@ export default function ProductDetailScreen() {
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, i) => i.toString()}
           onMomentumScrollEnd={(e) => {
-            setImageIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
+            setImageIndex(Math.round(e.nativeEvent.contentOffset.x / screenWidth));
           }}
           renderItem={({ item }) => (
             <Image
               source={imageSourceFor(product.categoryId, item)}
-              style={styles.productImage}
+              style={[styles.productImage, { width: screenWidth }]}
               resizeMode="cover"
             />
           )}
@@ -234,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productImage: { width: SCREEN_WIDTH, height: 380 },
+  productImage: { height: 380 },
   imageDots: {
     flexDirection: 'row',
     justifyContent: 'center',

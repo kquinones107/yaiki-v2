@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useCartStore } from '@/store/cartStore';
-import { useCustomerStore } from '@/store/customerStore';
+import { useProfileStore } from '@/store/profileStore';
 import { createOrder, shippingCostFor } from '@/services/orderService';
 import { PAYMENT_NOTICE, ShippingAddress } from '@/types';
 
@@ -21,22 +21,15 @@ const money = (n: number) => `$${n.toLocaleString('es-CO')}`;
 
 export default function CheckoutScreen() {
   const { items, totalPrice, clearCart } = useCartStore();
-  const { customer, address, saveAddress } = useCustomerStore();
+  const { deviceId, uid, profile, saveProfile } = useProfileStore();
 
-  const [form, setForm] = useState<ShippingAddress>({
-    fullName: '',
-    phone: '',
-    address: '',
-    city: '',
-    notes: '',
-  });
+  const [form, setForm] = useState<ShippingAddress>(profile);
   const [submitting, setSubmitting] = useState(false);
 
-  // Precargar la dirección guardada en el perfil
+  // Precargar los datos guardados en el dispositivo
   useEffect(() => {
-    if (address) setForm(address);
-    else if (customer) setForm((f) => ({ ...f, fullName: customer.name, phone: customer.phone ?? '' }));
-  }, [address, customer]);
+    setForm(profile);
+  }, [profile]);
 
   const subtotal = totalPrice();
   const shipping = shippingCostFor(subtotal);
@@ -54,10 +47,6 @@ export default function CheckoutScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!customer) {
-      router.replace('/(tabs)/cuenta');
-      return;
-    }
     const problem = validate();
     if (problem) {
       Toast.show({ type: 'error', text1: 'Revisa tus datos', text2: problem });
@@ -66,10 +55,10 @@ export default function CheckoutScreen() {
 
     setSubmitting(true);
     try {
-      await saveAddress(form);
+      saveProfile(form);
       const { id, orderNumber } = await createOrder({
-        customerId: customer.uid,
-        customerEmail: customer.email,
+        customerId: uid ?? deviceId,
+        customerEmail: form.email?.trim() ?? '',
         items,
         shipping: form,
         paymentMethod: 'contraentrega',
@@ -85,28 +74,6 @@ export default function CheckoutScreen() {
       setSubmitting(false);
     }
   };
-
-  // Sin cuenta: pedir login antes de continuar
-  if (!customer) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <Header title="Finalizar pedido" />
-        <View style={styles.gateBox}>
-          <Ionicons name="person-circle-outline" size={56} color={Colors.primary} />
-          <Text style={styles.gateTitle}>Entra a tu cuenta</Text>
-          <Text style={styles.gateText}>
-            Necesitamos tu cuenta para guardar el pedido y que puedas seguir su estado desde la app.
-          </Text>
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => router.replace('/(tabs)/cuenta')}
-          >
-            <Text style={styles.primaryBtnText}>Entrar o crear cuenta</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   if (items.length === 0) {
     return (
@@ -132,10 +99,21 @@ export default function CheckoutScreen() {
       >
         {/* DATOS DE ENVÍO */}
         <Text style={styles.sectionTitle}>Datos de envío</Text>
+        <Text style={styles.sectionHint}>
+          No necesitas crear una cuenta: solo los datos para llevarte el pedido.
+          Quedan guardados en tu teléfono para la próxima vez.
+        </Text>
         <Field label="Nombre completo" value={form.fullName} onChange={set('fullName')} placeholder="Sofía Ramírez" />
         <Field label="Teléfono / WhatsApp" value={form.phone} onChange={set('phone')} placeholder="300 123 4567" keyboardType="phone-pad" />
         <Field label="Dirección" value={form.address} onChange={set('address')} placeholder="Calle 10 # 5-23, Apto 301" />
         <Field label="Ciudad" value={form.city} onChange={set('city')} placeholder="Medellín" />
+        <Field
+          label="Correo (opcional)"
+          value={form.email ?? ''}
+          onChange={set('email')}
+          placeholder="correo@ejemplo.com"
+          keyboardType="email-address"
+        />
         <Field
           label="Indicaciones para la entrega (opcional)"
           value={form.notes ?? ''}
@@ -234,7 +212,7 @@ function Field({
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  keyboardType?: 'default' | 'phone-pad';
+  keyboardType?: 'default' | 'phone-pad' | 'email-address';
   multiline?: boolean;
 }) {
   return (
@@ -267,6 +245,12 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   headerTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
   scroll: { padding: Spacing.md },
+  sectionHint: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: Spacing.sm,
+  },
   sectionTitle: {
     color: Colors.textPrimary,
     fontSize: 16,

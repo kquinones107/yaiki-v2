@@ -5,7 +5,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Image, FlatList, Linking, Dimensions, Animated,
+  Image, FlatList, Linking, useWindowDimensions, Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -17,8 +17,6 @@ import { Category, Product } from '@/types';
 import { useCartStore } from '@/store/cartStore';
 import Toast from 'react-native-toast-message';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 // --- HERO CAROUSEL ---
 const HERO_IMAGES = [
   { source: require('@/assets/images/hero-anillos.jpg'), title: 'Nueva Colección' },
@@ -27,6 +25,7 @@ const HERO_IMAGES = [
 ];
 
 function HeroCarousel() {
+  const { width: screenWidth } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -39,6 +38,11 @@ function HeroCarousel() {
     return () => clearInterval(interval);
   }, [currentIndex]);
 
+  // Al cambiar el ancho (iPad, ventana redimensionada) se reencuadra la lámina
+  React.useEffect(() => {
+    flatListRef.current?.scrollToOffset({ offset: currentIndex * screenWidth, animated: false });
+  }, [screenWidth]);
+
   return (
     <View style={styles.heroContainer}>
       <FlatList
@@ -49,11 +53,11 @@ function HeroCarousel() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={(e) => {
-          const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          const idx = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
           setCurrentIndex(idx);
         }}
         renderItem={({ item }) => (
-          <View style={styles.heroSlide}>
+          <View style={[styles.heroSlide, { width: screenWidth }]}>
             <Image source={item.source} style={styles.heroImage} resizeMode="cover" />
             <View style={styles.heroOverlay}>
               <Text style={styles.heroSubtitle}>YAIKI ACCESORIOS</Text>
@@ -270,7 +274,7 @@ const styles = StyleSheet.create({
   },
   // Hero
   heroContainer: { position: 'relative' },
-  heroSlide: { width: SCREEN_WIDTH, height: 280 },
+  heroSlide: { height: 280 },
   heroImage: { width: '100%', height: '100%' },
   heroOverlay: {
     ...StyleSheet.absoluteFill,

@@ -96,6 +96,8 @@ export interface ShippingAddress {
   address: string;
   city: string;
   notes?: string;
+  /** Opcional: solo si la clienta quiere copia del pedido por correo */
+  email?: string;
 }
 
 /**

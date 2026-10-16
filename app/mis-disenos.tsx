@@ -3,43 +3,32 @@
 // =============================================
 import React from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import BraceletPreview from '@/components/BraceletPreview';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { deleteDesign, getMyDesigns } from '@/services/designService';
-import { useCustomerStore } from '@/store/customerStore';
+import { useProfileStore } from '@/store/profileStore';
 import { useCartStore } from '@/store/cartStore';
 import { BraceletDesign } from '@/types';
 
 const money = (n: number) => `$${n.toLocaleString('es-CO')}`;
 
 export default function MisDisenosScreen() {
-  const { customer } = useCustomerStore();
-  const queryClient = useQueryClient();
+  const { designs, removeDesign } = useProfileStore();
   const addCustomDesign = useCartStore((s) => s.addCustomDesign);
 
-  const { data: designs = [], isLoading } = useQuery({
-    queryKey: ['designs', customer?.uid],
-    queryFn: () => getMyDesigns(customer!.uid),
-    enabled: !!customer,
-  });
-
   const handleDelete = (design: BraceletDesign) => {
-    if (!customer) return;
     Alert.alert('Eliminar diseño', `¿Quitar "${design.name}" de tus diseños?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
-        onPress: async () => {
-          await deleteDesign(customer.uid, design.id);
-          queryClient.invalidateQueries({ queryKey: ['designs', customer.uid] });
+        onPress: () => {
+          removeDesign(design.id);
           Toast.show({ type: 'success', text1: 'Diseño eliminado' });
         },
       },
@@ -56,21 +45,7 @@ export default function MisDisenosScreen() {
         <View style={{ width: 32 }} />
       </View>
 
-      {!customer ? (
-        <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>Entra a tu cuenta</Text>
-          <Text style={styles.emptyText}>
-            Guarda tus pulseras personalizadas para volver a pedirlas cuando quieras.
-          </Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/cuenta')}>
-            <Text style={styles.primaryBtnText}>Entrar</Text>
-          </TouchableOpacity>
-        </View>
-      ) : isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={Colors.primary} />
-        </View>
-      ) : designs.length === 0 ? (
+      {designs.length === 0 ? (
         <View style={styles.centered}>
           <Text style={styles.emptyIcon}>📿</Text>
           <Text style={styles.emptyTitle}>Aún no guardas diseños</Text>

@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toastConfig } from '@/components/ui/ToastConfig';
 import AnimatedIntro from '@/components/AnimatedIntro';
 import { getFeaturedProducts, getCategories } from '@/services/productService';
-import { useCustomerStore } from '@/store/customerStore';
+import { useProfileStore } from '@/store/profileStore';
 
 // Mantener el splash nativo hasta que AnimatedIntro tome el relevo
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -33,10 +33,10 @@ export default function RootLayout() {
   const insets = useSafeAreaInsets();
   const [appReady, setAppReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const initCustomer = useCustomerStore((s) => s.init);
+  const initAuth = useProfileStore((s) => s.initAuth);
 
-  // Restaurar la sesión de la clienta al abrir la app
-  useEffect(() => initCustomer(), []);
+  // Sesión anónima para poder guardar pedidos sin pedir cuenta
+  useEffect(() => initAuth(), []);
 
   // Precargar lo que muestra el Home para que aparezca completo tras el intro
   useEffect(() => {

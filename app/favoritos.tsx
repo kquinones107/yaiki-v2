@@ -3,37 +3,26 @@
 // =============================================
 import React from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import ProductImage from '@/components/ProductImage';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { getFavorites, removeFavorite } from '@/services/favoriteService';
-import { useCustomerStore } from '@/store/customerStore';
+import { useProfileStore } from '@/store/profileStore';
 import { useCartStore } from '@/store/cartStore';
 import { Product } from '@/types';
 
 const money = (n: number) => `$${n.toLocaleString('es-CO')}`;
 
 export default function FavoritosScreen() {
-  const { customer } = useCustomerStore();
-  const queryClient = useQueryClient();
+  const { favorites, toggleFavorite } = useProfileStore();
   const addItem = useCartStore((s) => s.addItem);
 
-  const { data: favorites = [], isLoading } = useQuery({
-    queryKey: ['favorites', customer?.uid],
-    queryFn: () => getFavorites(customer!.uid),
-    enabled: !!customer,
-  });
-
-  const handleRemove = async (product: Product) => {
-    if (!customer) return;
-    await removeFavorite(customer.uid, product.id);
-    queryClient.invalidateQueries({ queryKey: ['favorites', customer.uid] });
+  const handleRemove = (product: Product) => {
+    toggleFavorite(product);
     Toast.show({ type: 'success', text1: 'Quitado de favoritos' });
   };
 
@@ -47,19 +36,7 @@ export default function FavoritosScreen() {
         <View style={{ width: 32 }} />
       </View>
 
-      {!customer ? (
-        <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>Entra a tu cuenta</Text>
-          <Text style={styles.emptyText}>Guarda tus piezas favoritas para encontrarlas rápido.</Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/cuenta')}>
-            <Text style={styles.primaryBtnText}>Entrar</Text>
-          </TouchableOpacity>
-        </View>
-      ) : isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={Colors.primary} />
-        </View>
-      ) : favorites.length === 0 ? (
+      {favorites.length === 0 ? (
         <View style={styles.centered}>
           <Text style={styles.emptyIcon}>💛</Text>
           <Text style={styles.emptyTitle}>Sin favoritos todavía</Text>
